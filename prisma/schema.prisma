@@ -1,0 +1,58 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// users schema
+model User {
+  id       String   @id @default(uuid()) // primary key for users
+  email    String
+  provider Provider
+  streams  Stream[]  // array of ids of stream related to streams --->  one to may relation
+  upvotes  Upvotes[] // array of ids of upvotes related to upvotes ---> one to may relation
+}
+
+// Stream schema
+model Stream {
+  id          String      @id @default(uuid()) // primary key for stream
+  type        StreamType
+  url         String
+  extractedID String
+  active      Boolean     @default(true) // default status of stream
+  upvotes     Upvotes[]
+  userId      String      
+  user        User        @relation(fields: [userId], references: [id]) // foriegn key to many to one relation
+}
+
+// Upvotes schema
+model Upvotes {
+  id        String      @id @default(uuid())  //primary key for upvotes
+  userId    String
+  streamId  String
+  user      User        @relation(fields: [userId], references: [id]) // foreign key for many to one relation
+  stream    Stream      @relation(fields: [streamId], references: [id]) // foreign key for one to may reltion
+  @@unique([userId, streamId]) // it specifys evey userid and stream id is different
+  // this ensures user can only upvotes a stram only ones
+}
+
+
+// enum for stream type
+enum StreamType {
+  Spotify
+  Youtube
+}
+
+// enum for provider
+enum Provider {
+  Google
+}
